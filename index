@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>P&L Calendar Journal</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: white;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    .top {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    button {
+      padding: 10px 14px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .total {
+      text-align: center;
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+
+    .calendar {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 10px;
+    }
+
+    .day-name {
+      text-align: center;
+      font-weight: bold;
+      color: #aaa;
+    }
+
+    .day {
+      background: #1c1c1c;
+      min-height: 110px;
+      border-radius: 10px;
+      padding: 10px;
+      cursor: pointer;
+      border: 1px solid #333;
+    }
+
+    .day:hover {
+      background: #252525;
+    }
+
+    .date {
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .profit {
+      color: #00d26a;
+      font-weight: bold;
+    }
+
+    .loss {
+      color: #ff4d4d;
+      font-weight: bold;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.8);
+      justify-content: center;
+      align-items: center;
+    }
+
+    .box {
+      background: #1c1c1c;
+      padding: 20px;
+      border-radius: 12px;
+      width: 320px;
+    }
+
+    input, textarea {
+      width: 100%;
+      margin: 8px 0;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      box-sizing: border-box;
+    }
+
+    .entry {
+      font-size: 13px;
+      margin-top: 6px;
+      border-top: 1px solid #333;
+      padding-top: 5px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>P&L Calendar Journal</h1>
+
+  <div class="top">
+    <button onclick="changeMonth(-1)">← Prev</button>
+    <h2 id="monthYear"></h2>
+    <button onclick="changeMonth(1)">Next →</button>
+  </div>
+
+  <div class="total" id="monthlyTotal"></div>
+
+  <div class="calendar" id="calendar"></div>
+
+  <div class="modal" id="modal">
+    <div class="box">
+      <h2 id="selectedDateText"></h2>
+
+      <input id="eventInput" placeholder="Event / Game" />
+      <input id="resultInput" placeholder="Result, ex: Win or Loss" />
+      <input id="plInput" type="number" placeholder="P&L, ex: 50 or -25" />
+      <textarea id="notesInput" placeholder="Notes"></textarea>
+
+      <button onclick="saveEntry()">Save Entry</button>
+      <button onclick="closeModal()">Close</button>
+    </div>
+  </div>
+
+  <script>
+    let currentDate = new Date();
+    let selectedDate = null;
+
+    let entries = JSON.parse(localStorage.getItem("journalEntries")) || {};
+
+    function renderCalendar() {
+      const calendar = document.getElementById("calendar");
+      calendar.innerHTML = "";
+
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+
+      const monthName = currentDate.toLocaleString("default", { month: "long" });
+      document.getElementById("monthYear").textContent = `${monthName} ${year}`;
+
+      const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+      days.forEach(day => {
+        const div = document.createElement("div");
+        div.className = "day-name";
+        div.textContent = day;
+        calendar.appendChild(div);
+      });
+
+      const firstDay = new Date(year, month, 1).getDay();
+      const lastDate = new Date(year, month + 1, 0).getDate();
+
+      for (let i = 0; i < firstDay; i++) {
+        calendar.appendChild(document.createElement("div"));
+      }
+
+      let monthlyTotal = 0;
+
+      for (let day = 1; day <= lastDate; day++) {
+        const dateKey = `${year}-${month + 1}-${day}`;
+        const dayBox = document.createElement("div");
+        dayBox.className = "day";
+        dayBox.onclick = () => openModal(dateKey);
+
+        let dayTotal = 0;
+        if (entries[dateKey]) {
+          entries[dateKey].forEach(entry => {
+            dayTotal += Number(entry.pl);
+          });
+        }
+
+        monthlyTotal += dayTotal;
+
+        dayBox.innerHTML = `
+          <div class="date">${day}</div>
+          ${
+            dayTotal !== 0
+              ? `<div class="${dayTotal >= 0 ? "profit" : "loss"}">
+                  ${dayTotal >= 0 ? "+" : ""}$${dayTotal}
+                </div>`
+              : ""
+          }
+        `;
+
+        if (entries[dateKey]) {
+          entries[dateKey].forEach(entry => {
+            dayBox.innerHTML += `
+              <div class="entry">
+                ${entry.event}<br>
+                ${entry.result}
+              </div>
+            `;
+          });
+        }
+
+        calendar.appendChild(dayBox);
+      }
+
+      const totalBox = document.getElementById("monthlyTotal");
+      totalBox.textContent = `Monthly Total: ${monthlyTotal >= 0 ? "+" : ""}$${monthlyTotal}`;
+      totalBox.className = monthlyTotal >= 0 ? "total profit" : "total loss";
+    }
+
+    function openModal(dateKey) {
+      selectedDate = dateKey;
+      document.getElementById("selectedDateText").textContent = dateKey;
+      document.getElementById("modal").style.display = "flex";
+    }
+
+    function closeModal() {
+      document.getElementById("modal").style.display = "none";
+      document.getElementById("eventInput").value = "";
+      document.getElementById("resultInput").value = "";
+      document.getElementById("plInput").value = "";
+      document.getElementById("notesInput").value = "";
+    }
+
+    function saveEntry() {
+      const event = document.getElementById("eventInput").value;
+      const result = document.getElementById("resultInput").value;
+      const pl = document.getElementById("plInput").value;
+      const notes = document.getElementById("notesInput").value;
+
+      if (!entries[selectedDate]) {
+        entries[selectedDate] = [];
+      }
+
+      entries[selectedDate].push({
+        event,
+        result,
+        pl,
+        notes
+      });
+
+      localStorage.setItem("journalEntries", JSON.stringify(entries));
+
+      closeModal();
+      renderCalendar();
+    }
+
+    function changeMonth(amount) {
+      currentDate.setMonth(currentDate.getMonth() + amount);
+      renderCalendar();
+    }
+
+    renderCalendar();
+  </script>
+
+</body>
+</html>
