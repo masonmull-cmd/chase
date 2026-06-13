@@ -17,6 +17,29 @@
       text-align: center;
     }
 
+    .login-page {
+      max-width: 350px;
+      margin: 120px auto;
+      background: #1c1c1c;
+      padding: 25px;
+      border-radius: 12px;
+      text-align: center;
+      border: 1px solid #333;
+    }
+
+    .login-page input {
+      margin-bottom: 12px;
+    }
+
+    #loginError {
+      color: #ff4d4d;
+      font-weight: bold;
+    }
+
+    #app {
+      display: none;
+    }
+
     .top {
       display: flex;
       justify-content: center;
@@ -31,6 +54,14 @@
       border-radius: 8px;
       cursor: pointer;
       font-weight: bold;
+    }
+
+    .logout-btn {
+      position: fixed;
+      top: 15px;
+      right: 15px;
+      background: #ff4d4d;
+      color: white;
     }
 
     .total {
@@ -114,17 +145,29 @@
 </head>
 <body>
 
-  <h1>P&L Calendar Journal</h1>
-
-  <div class="top">
-    <button onclick="changeMonth(-1)">← Prev</button>
-    <h2 id="monthYear"></h2>
-    <button onclick="changeMonth(1)">Next →</button>
+  <div id="loginPage" class="login-page">
+    <h1>Login</h1>
+    <input id="username" placeholder="Username" />
+    <input id="password" type="password" placeholder="Password" />
+    <button onclick="login()">Login</button>
+    <p id="loginError"></p>
   </div>
 
-  <div class="total" id="monthlyTotal"></div>
+  <div id="app">
+    <button class="logout-btn" onclick="logout()">Logout</button>
 
-  <div class="calendar" id="calendar"></div>
+    <h1>P&L Calendar Journal</h1>
+
+    <div class="top">
+      <button onclick="changeMonth(-1)">← Prev</button>
+      <h2 id="monthYear"></h2>
+      <button onclick="changeMonth(1)">Next →</button>
+    </div>
+
+    <div class="total" id="monthlyTotal"></div>
+
+    <div class="calendar" id="calendar"></div>
+  </div>
 
   <div class="modal" id="modal">
     <div class="box">
@@ -145,6 +188,34 @@
     let selectedDate = null;
 
     let entries = JSON.parse(localStorage.getItem("journalEntries")) || {};
+
+    function login() {
+      const user = document.getElementById("username").value;
+      const pass = document.getElementById("password").value;
+
+      if (user === "1" && pass === "1") {
+        localStorage.setItem("loggedIn", "true");
+        document.getElementById("loginPage").style.display = "none";
+        document.getElementById("app").style.display = "block";
+        renderCalendar();
+      } else {
+        document.getElementById("loginError").textContent = "Wrong username or password";
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem("loggedIn");
+      document.getElementById("loginPage").style.display = "block";
+      document.getElementById("app").style.display = "none";
+    }
+
+    function checkLogin() {
+      if (localStorage.getItem("loggedIn") === "true") {
+        document.getElementById("loginPage").style.display = "none";
+        document.getElementById("app").style.display = "block";
+        renderCalendar();
+      }
+    }
 
     function renderCalendar() {
       const calendar = document.getElementById("calendar");
@@ -260,7 +331,7 @@
       renderCalendar();
     }
 
-    renderCalendar();
+    checkLogin();
   </script>
 
 </body>
