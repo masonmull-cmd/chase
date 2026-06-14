@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>P&L Calendar Journal</title>
+
   <style>
     body {
       margin: 0;
@@ -17,39 +18,34 @@
       background-attachment: fixed;
     }
 
-    h1 {
+    h1, h2 {
       text-align: center;
+    }
+
+    .login-page, .panel, .box {
+      background: rgba(20,20,20,0.88);
+      border: 1px solid #333;
+      border-radius: 12px;
+      padding: 20px;
     }
 
     .login-page {
       max-width: 350px;
       margin: 120px auto;
-      background: rgba(20,20,20,0.88);
-      padding: 25px;
-      border-radius: 12px;
       text-align: center;
-      border: 1px solid #333;
-    }
-
-    .login-page input {
-      margin-bottom: 12px;
-    }
-
-    #loginError {
-      color: #ff4d4d;
-      font-weight: bold;
     }
 
     #app {
       display: none;
     }
 
-    .top {
-      display: flex;
-      justify-content: center;
-      gap: 15px;
-      align-items: center;
-      margin-bottom: 20px;
+    input, textarea, select {
+      width: 100%;
+      margin: 8px 0;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      box-sizing: border-box;
     }
 
     button {
@@ -58,6 +54,7 @@
       border-radius: 8px;
       cursor: pointer;
       font-weight: bold;
+      margin: 4px;
     }
 
     .logout-btn {
@@ -66,6 +63,42 @@
       right: 15px;
       background: #ff4d4d;
       color: white;
+    }
+
+    .top {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .stat {
+      background: rgba(20,20,20,0.82);
+      border: 1px solid #333;
+      border-radius: 12px;
+      padding: 15px;
+      text-align: center;
+    }
+
+    .stat h3 {
+      margin: 0;
+      color: #aaa;
+      font-size: 14px;
+    }
+
+    .stat p {
+      font-size: 22px;
+      margin: 8px 0 0;
+      font-weight: bold;
     }
 
     .total {
@@ -87,16 +120,21 @@
     }
 
     .day {
-      background: rgba(20, 20, 20, 0.82);
-      min-height: 110px;
+      background: rgba(20,20,20,0.82);
+      min-height: 115px;
       border-radius: 10px;
       padding: 10px;
       cursor: pointer;
       border: 1px solid #333;
+      overflow: hidden;
     }
 
     .day:hover {
-      background: rgba(35, 35, 35, 0.9);
+      background: rgba(35,35,35,0.9);
+    }
+
+    .today {
+      border: 2px solid white;
     }
 
     .date {
@@ -114,6 +152,13 @@
       font-weight: bold;
     }
 
+    .entry {
+      font-size: 13px;
+      margin-top: 6px;
+      border-top: 1px solid #333;
+      padding-top: 5px;
+    }
+
     .modal {
       display: none;
       position: fixed;
@@ -121,32 +166,66 @@
       background: rgba(0,0,0,0.8);
       justify-content: center;
       align-items: center;
+      z-index: 99;
     }
 
     .box {
-      background: rgba(20,20,20,0.95);
-      padding: 20px;
-      border-radius: 12px;
-      width: 320px;
+      width: 360px;
+      max-height: 90vh;
+      overflow-y: auto;
     }
 
-    input, textarea {
+    .charts {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    canvas {
       width: 100%;
-      margin: 8px 0;
-      padding: 10px;
-      border-radius: 8px;
-      border: none;
-      box-sizing: border-box;
+      background: rgba(20,20,20,0.82);
+      border-radius: 12px;
+      border: 1px solid #333;
     }
 
-    .entry {
-      font-size: 13px;
-      margin-top: 6px;
-      border-top: 1px solid #333;
-      padding-top: 5px;
+    .heatmap {
+      display: grid;
+      grid-template-columns: repeat(53, 1fr);
+      gap: 3px;
+      margin-top: 10px;
+    }
+
+    .heat-cell {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      background: rgba(80,80,80,0.5);
+      border-radius: 3px;
+    }
+
+    .img-preview {
+      max-width: 100%;
+      border-radius: 8px;
+      margin-top: 8px;
+    }
+
+    #loginError {
+      color: #ff4d4d;
+      font-weight: bold;
+    }
+
+    @media (max-width: 700px) {
+      .calendar {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .day-name {
+        display: none;
+      }
     }
   </style>
 </head>
+
 <body>
 
   <div id="loginPage" class="login-page">
@@ -162,35 +241,67 @@
 
     <h1>P&L Calendar Journal</h1>
 
+    <div class="dashboard">
+      <div class="stat"><h3>Total P&L</h3><p id="statTotal">$0</p></div>
+      <div class="stat"><h3>Total Entries</h3><p id="statEntries">0</p></div>
+      <div class="stat"><h3>Wins</h3><p id="statWins">0</p></div>
+      <div class="stat"><h3>Losses</h3><p id="statLosses">0</p></div>
+      <div class="stat"><h3>Win %</h3><p id="statWinRate">0%</p></div>
+      <div class="stat"><h3>Current Streak</h3><p id="statStreak">0</p></div>
+    </div>
+
     <div class="top">
       <button onclick="changeMonth(-1)">← Prev</button>
       <h2 id="monthYear"></h2>
       <button onclick="changeMonth(1)">Next →</button>
+      <button onclick="goToday()">Today</button>
+      <button onclick="exportData()">Export JSON</button>
+      <input type="file" id="importFile" onchange="importData(event)" style="max-width:220px;">
     </div>
 
     <div class="total" id="monthlyTotal"></div>
 
     <div class="calendar" id="calendar"></div>
+
+    <div class="charts">
+      <div class="panel">
+        <h2>Monthly Graph</h2>
+        <canvas id="monthlyChart" width="500" height="250"></canvas>
+      </div>
+
+      <div class="panel">
+        <h2>Year Heatmap</h2>
+        <div class="heatmap" id="heatmap"></div>
+      </div>
+    </div>
   </div>
 
   <div class="modal" id="modal">
     <div class="box">
       <h2 id="selectedDateText"></h2>
 
-      <input id="eventInput" placeholder="Event / Game" />
-      <input id="resultInput" placeholder="Result, ex: Win or Loss" />
+      <input id="eventInput" placeholder="Entry title" />
+      <select id="resultInput">
+        <option value="Win">Win</option>
+        <option value="Loss">Loss</option>
+        <option value="Push">Push</option>
+        <option value="Void">Void</option>
+        <option value="Cancelled">Cancelled</option>
+      </select>
       <input id="plInput" type="number" placeholder="P&L, ex: 50 or -25" />
       <textarea id="notesInput" placeholder="Notes"></textarea>
+      <input id="imageInput" type="file" accept="image/*" />
 
       <button onclick="saveEntry()">Save Entry</button>
       <button onclick="closeModal()">Close</button>
+
+      <div id="dayEntries"></div>
     </div>
   </div>
 
   <script>
     let currentDate = new Date();
     let selectedDate = null;
-
     let entries = JSON.parse(localStorage.getItem("journalEntries")) || {};
 
     function login() {
@@ -201,7 +312,7 @@
         localStorage.setItem("loggedIn", "true");
         document.getElementById("loginPage").style.display = "none";
         document.getElementById("app").style.display = "block";
-        renderCalendar();
+        renderAll();
       } else {
         document.getElementById("loginError").textContent = "Wrong username or password";
       }
@@ -217,8 +328,19 @@
       if (localStorage.getItem("loggedIn") === "true") {
         document.getElementById("loginPage").style.display = "none";
         document.getElementById("app").style.display = "block";
-        renderCalendar();
+        renderAll();
       }
+    }
+
+    function renderAll() {
+      renderCalendar();
+      renderStats();
+      renderChart();
+      renderHeatmap();
+    }
+
+    function getDateKey(year, month, day) {
+      return `${year}-${month + 1}-${day}`;
     }
 
     function renderCalendar() {
@@ -228,11 +350,10 @@
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth();
 
-      const monthName = currentDate.toLocaleString("default", { month: "long" });
-      document.getElementById("monthYear").textContent = `${monthName} ${year}`;
+      document.getElementById("monthYear").textContent =
+        `${currentDate.toLocaleString("default", { month: "long" })} ${year}`;
 
-      const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-      days.forEach(day => {
+      ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].forEach(day => {
         const div = document.createElement("div");
         div.className = "day-name";
         div.textContent = day;
@@ -247,17 +368,27 @@
       }
 
       let monthlyTotal = 0;
+      const today = new Date();
 
       for (let day = 1; day <= lastDate; day++) {
-        const dateKey = `${year}-${month + 1}-${day}`;
+        const dateKey = getDateKey(year, month, day);
         const dayBox = document.createElement("div");
         dayBox.className = "day";
+
+        if (
+          today.getFullYear() === year &&
+          today.getMonth() === month &&
+          today.getDate() === day
+        ) {
+          dayBox.classList.add("today");
+        }
+
         dayBox.onclick = () => openModal(dateKey);
 
         let dayTotal = 0;
         if (entries[dateKey]) {
           entries[dateKey].forEach(entry => {
-            dayTotal += Number(entry.pl);
+            dayTotal += Number(entry.pl || 0);
           });
         }
 
@@ -265,21 +396,18 @@
 
         dayBox.innerHTML = `
           <div class="date">${day}</div>
-          ${
-            dayTotal !== 0
-              ? `<div class="${dayTotal >= 0 ? "profit" : "loss"}">
-                  ${dayTotal >= 0 ? "+" : ""}$${dayTotal}
-                </div>`
-              : ""
-          }
+          ${dayTotal !== 0 ? `
+            <div class="${dayTotal >= 0 ? "profit" : "loss"}">
+              ${dayTotal >= 0 ? "+" : ""}$${dayTotal}
+            </div>` : ""}
         `;
 
         if (entries[dateKey]) {
           entries[dateKey].forEach(entry => {
             dayBox.innerHTML += `
               <div class="entry">
-                ${entry.event}<br>
-                ${entry.result}
+                ${entry.event || "Entry"}<br>
+                ${entry.result || ""}
               </div>
             `;
           });
@@ -293,46 +421,238 @@
       totalBox.className = monthlyTotal >= 0 ? "total profit" : "total loss";
     }
 
+    function renderStats() {
+      let total = 0;
+      let count = 0;
+      let wins = 0;
+      let losses = 0;
+
+      Object.values(entries).forEach(day => {
+        day.forEach(entry => {
+          count++;
+          total += Number(entry.pl || 0);
+          if ((entry.result || "").toLowerCase() === "win") wins++;
+          if ((entry.result || "").toLowerCase() === "loss") losses++;
+        });
+      });
+
+      const winRate = wins + losses > 0 ? Math.round((wins / (wins + losses)) * 100) : 0;
+
+      document.getElementById("statTotal").textContent = `${total >= 0 ? "+" : ""}$${total}`;
+      document.getElementById("statTotal").className = total >= 0 ? "profit" : "loss";
+      document.getElementById("statEntries").textContent = count;
+      document.getElementById("statWins").textContent = wins;
+      document.getElementById("statLosses").textContent = losses;
+      document.getElementById("statWinRate").textContent = `${winRate}%`;
+      document.getElementById("statStreak").textContent = getCurrentStreak();
+    }
+
+    function getCurrentStreak() {
+      const dates = Object.keys(entries).sort((a, b) => new Date(b) - new Date(a));
+      let streak = 0;
+      let streakType = null;
+
+      for (const date of dates) {
+        let dayTotal = entries[date].reduce((sum, e) => sum + Number(e.pl || 0), 0);
+
+        if (dayTotal === 0) continue;
+
+        const type = dayTotal > 0 ? "win" : "loss";
+
+        if (!streakType) streakType = type;
+        if (type === streakType) streak++;
+        else break;
+      }
+
+      if (streak === 0) return "0";
+      return `${streak} ${streakType === "win" ? "green" : "red"}`;
+    }
+
     function openModal(dateKey) {
       selectedDate = dateKey;
       document.getElementById("selectedDateText").textContent = dateKey;
       document.getElementById("modal").style.display = "flex";
+      showDayEntries();
     }
 
     function closeModal() {
       document.getElementById("modal").style.display = "none";
       document.getElementById("eventInput").value = "";
-      document.getElementById("resultInput").value = "";
       document.getElementById("plInput").value = "";
       document.getElementById("notesInput").value = "";
+      document.getElementById("imageInput").value = "";
     }
 
     function saveEntry() {
       const event = document.getElementById("eventInput").value;
       const result = document.getElementById("resultInput").value;
-      const pl = document.getElementById("plInput").value;
+      const pl = document.getElementById("plInput").value || 0;
       const notes = document.getElementById("notesInput").value;
+      const imageFile = document.getElementById("imageInput").files[0];
 
-      if (!entries[selectedDate]) {
-        entries[selectedDate] = [];
+      const newEntry = { event, result, pl, notes, image: "" };
+
+      if (imageFile) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          newEntry.image = e.target.result;
+          finishSave(newEntry);
+        };
+        reader.readAsDataURL(imageFile);
+      } else {
+        finishSave(newEntry);
+      }
+    }
+
+    function finishSave(newEntry) {
+      if (!entries[selectedDate]) entries[selectedDate] = [];
+      entries[selectedDate].push(newEntry);
+      localStorage.setItem("journalEntries", JSON.stringify(entries));
+      closeModal();
+      renderAll();
+    }
+
+    function showDayEntries() {
+      const container = document.getElementById("dayEntries");
+      container.innerHTML = "<h3>Entries</h3>";
+
+      if (!entries[selectedDate] || entries[selectedDate].length === 0) {
+        container.innerHTML += "<p>No entries yet.</p>";
+        return;
       }
 
-      entries[selectedDate].push({
-        event,
-        result,
-        pl,
-        notes
+      entries[selectedDate].forEach((entry, index) => {
+        container.innerHTML += `
+          <div class="entry">
+            <strong>${entry.event || "Entry"}</strong><br>
+            Result: ${entry.result}<br>
+            P&L: ${Number(entry.pl) >= 0 ? "+" : ""}$${entry.pl}<br>
+            ${entry.notes ? `Notes: ${entry.notes}<br>` : ""}
+            ${entry.image ? `<img src="${entry.image}" class="img-preview">` : ""}
+            <br><button onclick="deleteEntry('${selectedDate}', ${index})">Delete</button>
+          </div>
+        `;
       });
+    }
 
+    function deleteEntry(dateKey, index) {
+      entries[dateKey].splice(index, 1);
+      if (entries[dateKey].length === 0) delete entries[dateKey];
       localStorage.setItem("journalEntries", JSON.stringify(entries));
-
-      closeModal();
-      renderCalendar();
+      showDayEntries();
+      renderAll();
     }
 
     function changeMonth(amount) {
       currentDate.setMonth(currentDate.getMonth() + amount);
-      renderCalendar();
+      renderAll();
+    }
+
+    function goToday() {
+      currentDate = new Date();
+      renderAll();
+    }
+
+    function renderChart() {
+      const canvas = document.getElementById("monthlyChart");
+      const ctx = canvas.getContext("2d");
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const year = currentDate.getFullYear();
+      const monthlyTotals = Array(12).fill(0);
+
+      Object.keys(entries).forEach(dateKey => {
+        const date = new Date(dateKey);
+        if (date.getFullYear() === year) {
+          entries[dateKey].forEach(e => {
+            monthlyTotals[date.getMonth()] += Number(e.pl || 0);
+          });
+        }
+      });
+
+      const max = Math.max(...monthlyTotals.map(Math.abs), 1);
+      const barWidth = canvas.width / 12;
+
+      ctx.font = "12px Arial";
+      ctx.textAlign = "center";
+
+      monthlyTotals.forEach((value, i) => {
+        const barHeight = Math.abs(value) / max * 90;
+        const x = i * barWidth + 10;
+        const middle = canvas.height / 2;
+
+        ctx.fillStyle = value >= 0 ? "#00d26a" : "#ff4d4d";
+        ctx.fillRect(
+          x,
+          value >= 0 ? middle - barHeight : middle,
+          barWidth - 18,
+          barHeight
+        );
+
+        ctx.fillStyle = "white";
+        ctx.fillText(
+          ["J","F","M","A","M","J","J","A","S","O","N","D"][i],
+          x + barWidth / 2 - 10,
+          canvas.height - 15
+        );
+      });
+
+      ctx.strokeStyle = "white";
+      ctx.beginPath();
+      ctx.moveTo(0, canvas.height / 2);
+      ctx.lineTo(canvas.width, canvas.height / 2);
+      ctx.stroke();
+    }
+
+    function renderHeatmap() {
+      const heatmap = document.getElementById("heatmap");
+      heatmap.innerHTML = "";
+
+      const year = currentDate.getFullYear();
+      const start = new Date(year, 0, 1);
+
+      for (let i = 0; i < 365; i++) {
+        const d = new Date(start);
+        d.setDate(start.getDate() + i);
+
+        const key = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+        let total = 0;
+
+        if (entries[key]) {
+          entries[key].forEach(e => total += Number(e.pl || 0));
+        }
+
+        const cell = document.createElement("div");
+        cell.className = "heat-cell";
+
+        if (total > 0) cell.style.background = "#00d26a";
+        if (total < 0) cell.style.background = "#ff4d4d";
+
+        cell.title = `${key}: ${total >= 0 ? "+" : ""}$${total}`;
+        heatmap.appendChild(cell);
+      }
+    }
+
+    function exportData() {
+      const blob = new Blob([JSON.stringify(entries, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "journal-backup.json";
+      a.click();
+    }
+
+    function importData(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        entries = JSON.parse(e.target.result);
+        localStorage.setItem("journalEntries", JSON.stringify(entries));
+        renderAll();
+      };
+      reader.readAsText(file);
     }
 
     checkLogin();
