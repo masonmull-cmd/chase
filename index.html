@@ -6,11 +6,15 @@
   <title>P&L Calendar Journal</title>
 
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
       font-family: Arial, sans-serif;
       color: white;
-      padding: 20px;
+      min-height: 100vh;
       background-image: url('https://cdn.discordapp.com/attachments/603275416807014469/1515172370875158638/GOmrTckWgAIdWKb.png?ex=6a2e09bb&is=6a2cb83b&hm=7172c117816008c981d0fc9a4ef7854691e30595c4f1ef8f38d2d08a51bb281f&');
       background-size: cover;
       background-position: center;
@@ -18,25 +22,35 @@
       background-attachment: fixed;
     }
 
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.25);
+      z-index: -1;
+    }
+
     h1, h2 {
       text-align: center;
+      color: #e7e7e7;
+      font-weight: 600;
+      letter-spacing: 1px;
     }
 
-    .login-page, .panel, .box {
-      background: rgba(20,20,20,0.88);
-      border: 1px solid #333;
-      border-radius: 12px;
-      padding: 20px;
+    button {
+      padding: 10px 14px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: bold;
+      margin: 4px;
+      background: rgba(255,255,255,0.88);
+      transition: 0.2s ease;
     }
 
-    .login-page {
-      max-width: 350px;
-      margin: 120px auto;
-      text-align: center;
-    }
-
-    #app {
-      display: none;
+    button:hover {
+      transform: translateY(-2px);
+      background: white;
     }
 
     input, textarea, select {
@@ -46,32 +60,89 @@
       border-radius: 8px;
       border: none;
       box-sizing: border-box;
+      outline: none;
     }
 
-    button {
-      padding: 10px 14px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
+    .login-page {
+      max-width: 360px;
+      margin: 120px auto;
+      text-align: center;
+      background: rgba(10,10,10,0.48);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 16px;
+      padding: 25px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+    }
+
+    #loginError {
+      color: #ff4d4d;
       font-weight: bold;
-      margin: 4px;
+    }
+
+    #app {
+      display: none;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      padding: 22px 16px;
+      background: rgba(10,10,10,0.45);
+      backdrop-filter: blur(12px);
+      border-right: 1px solid rgba(255,255,255,0.10);
+    }
+
+    .brand {
+      font-size: 22px;
+      font-weight: bold;
+      margin-bottom: 28px;
+      letter-spacing: 1px;
+    }
+
+    .nav-item {
+      display: block;
+      padding: 12px 14px;
+      margin: 8px 0;
+      border-radius: 12px;
+      color: #eaeaea;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .nav-item:hover {
+      background: rgba(255,255,255,0.12);
     }
 
     .logout-btn {
-      position: fixed;
-      top: 15px;
-      right: 15px;
-      background: #ff4d4d;
+      width: 100%;
+      background: rgba(255,77,77,0.85);
       color: white;
+      margin-top: 18px;
     }
 
-    .top {
-      display: flex;
-      justify-content: center;
-      gap: 15px;
-      align-items: center;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
+    .main {
+      padding: 24px;
+      overflow-x: hidden;
+    }
+
+    .header {
+      background: rgba(10,10,10,0.42);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 16px;
+      padding: 18px;
+      margin-bottom: 18px;
+      box-shadow: 0 14px 40px rgba(0,0,0,0.20);
     }
 
     .dashboard {
@@ -81,65 +152,127 @@
       margin-bottom: 20px;
     }
 
+    .stat, .panel, .box {
+      background: rgba(10,10,10,0.40);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      box-shadow: 0 14px 40px rgba(0,0,0,0.22);
+    }
+
     .stat {
-      background: rgba(20,20,20,0.82);
-      border: 1px solid #333;
-      border-radius: 12px;
-      padding: 15px;
+      padding: 16px;
       text-align: center;
     }
 
     .stat h3 {
       margin: 0;
-      color: #aaa;
-      font-size: 14px;
+      color: #bdbdbd;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
     }
 
     .stat p {
-      font-size: 22px;
+      font-size: 23px;
       margin: 8px 0 0;
       font-weight: bold;
     }
 
+    .top {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
     .total {
       text-align: center;
-      font-size: 24px;
-      margin-bottom: 20px;
+      font-size: 25px;
+      margin-bottom: 18px;
+      text-shadow: 0 2px 12px rgba(0,0,0,0.7);
+    }
+
+    .calendar-wrap {
+      overflow-x: auto;
+      padding-bottom: 4px;
     }
 
     .calendar {
       display: grid;
-      grid-template-columns: repeat(7, 1fr);
+      grid-template-columns: repeat(7, minmax(140px, 1fr));
       gap: 10px;
+      min-width: 980px;
     }
 
     .day-name {
       text-align: center;
       font-weight: bold;
-      color: #aaa;
+      color: #e0e0e0;
+      padding: 10px;
+      background: rgba(10,10,10,0.28);
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 10px;
     }
 
     .day {
-      background: rgba(20,20,20,0.82);
-      min-height: 115px;
-      border-radius: 10px;
-      padding: 10px;
+      background: rgba(10,10,10,0.45);
+      backdrop-filter: blur(4px);
+      min-height: 140px;
+      border-radius: 14px;
+      padding: 11px;
       cursor: pointer;
-      border: 1px solid #333;
+      border: 1px solid rgba(255,255,255,0.08);
       overflow: hidden;
+      transition: 0.2s ease;
+      position: relative;
     }
 
     .day:hover {
-      background: rgba(35,35,35,0.9);
+      transform: translateY(-3px);
+      background: rgba(15,15,15,0.58);
+      border-color: rgba(255,255,255,0.18);
+    }
+
+    .day.positive {
+      background: rgba(0,210,106,0.12);
+      border: 1px solid rgba(0,210,106,0.35);
+      box-shadow: inset 0 0 28px rgba(0,210,106,0.08);
+    }
+
+    .day.negative {
+      background: rgba(255,77,77,0.12);
+      border: 1px solid rgba(255,77,77,0.35);
+      box-shadow: inset 0 0 28px rgba(255,77,77,0.08);
     }
 
     .today {
-      border: 2px solid white;
+      border: 2px solid rgba(255,255,255,0.9) !important;
     }
 
     .date {
       font-weight: bold;
       margin-bottom: 8px;
+      color: #f1f1f1;
+    }
+
+    .day-total {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .day-count {
+      position: absolute;
+      top: 30px;
+      right: 10px;
+      font-size: 11px;
+      color: #cfcfcf;
     }
 
     .profit {
@@ -153,26 +286,29 @@
     }
 
     .entry {
-      font-size: 13px;
-      margin-top: 6px;
-      border-top: 1px solid #333;
-      padding-top: 5px;
+      font-size: 12.5px;
+      margin-top: 8px;
+      border-top: 1px solid rgba(255,255,255,0.10);
+      padding-top: 6px;
+      color: #eeeeee;
     }
 
     .modal {
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.8);
+      background: rgba(0,0,0,0.72);
       justify-content: center;
       align-items: center;
       z-index: 99;
+      padding: 18px;
     }
 
     .box {
-      width: 360px;
+      width: 390px;
       max-height: 90vh;
       overflow-y: auto;
+      padding: 20px;
     }
 
     .charts {
@@ -182,11 +318,15 @@
       margin-top: 20px;
     }
 
+    .panel {
+      padding: 18px;
+    }
+
     canvas {
       width: 100%;
-      background: rgba(20,20,20,0.82);
+      background: rgba(10,10,10,0.35);
       border-radius: 12px;
-      border: 1px solid #333;
+      border: 1px solid rgba(255,255,255,0.08);
     }
 
     .heatmap {
@@ -199,7 +339,7 @@
     .heat-cell {
       width: 100%;
       aspect-ratio: 1 / 1;
-      background: rgba(80,80,80,0.5);
+      background: rgba(90,90,90,0.35);
       border-radius: 3px;
     }
 
@@ -209,13 +349,49 @@
       margin-top: 8px;
     }
 
-    #loginError {
-      color: #ff4d4d;
-      font-weight: bold;
+    .file-input {
+      max-width: 230px;
+      background: rgba(255,255,255,0.9);
+      color: #111;
+      padding: 8px;
+    }
+
+    @media (max-width: 900px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: relative;
+        height: auto;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .brand {
+        width: 100%;
+        margin-bottom: 6px;
+      }
+
+      .nav-item {
+        margin: 0;
+      }
+
+      .logout-btn {
+        width: auto;
+        margin-top: 0;
+      }
+
+      .main {
+        padding: 16px;
+      }
     }
 
     @media (max-width: 700px) {
       .calendar {
+        min-width: 0;
         grid-template-columns: repeat(2, 1fr);
       }
 
@@ -237,42 +413,58 @@
   </div>
 
   <div id="app">
-    <button class="logout-btn" onclick="logout()">Logout</button>
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="brand">VizaTrades</div>
+        <a class="nav-item" href="#dashboard">Dashboard</a>
+        <a class="nav-item" href="#calendarSection">Calendar</a>
+        <a class="nav-item" href="#chartsSection">Charts</a>
+        <a class="nav-item" href="#heatmapSection">Heatmap</a>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+      </aside>
 
-    <h1>P&L Calendar Journal</h1>
+      <main class="main">
+        <section class="header">
+          <h1>P&L Calendar Journal</h1>
 
-    <div class="dashboard">
-      <div class="stat"><h3>Total P&L</h3><p id="statTotal">$0</p></div>
-      <div class="stat"><h3>Total Entries</h3><p id="statEntries">0</p></div>
-      <div class="stat"><h3>Wins</h3><p id="statWins">0</p></div>
-      <div class="stat"><h3>Losses</h3><p id="statLosses">0</p></div>
-      <div class="stat"><h3>Win %</h3><p id="statWinRate">0%</p></div>
-      <div class="stat"><h3>Current Streak</h3><p id="statStreak">0</p></div>
-    </div>
+          <div class="top">
+            <button onclick="changeMonth(-1)">← Prev</button>
+            <h2 id="monthYear"></h2>
+            <button onclick="changeMonth(1)">Next →</button>
+            <button onclick="goToday()">Today</button>
+            <button onclick="exportData()">Export JSON</button>
+            <input class="file-input" type="file" id="importFile" onchange="importData(event)">
+          </div>
+        </section>
 
-    <div class="top">
-      <button onclick="changeMonth(-1)">← Prev</button>
-      <h2 id="monthYear"></h2>
-      <button onclick="changeMonth(1)">Next →</button>
-      <button onclick="goToday()">Today</button>
-      <button onclick="exportData()">Export JSON</button>
-      <input type="file" id="importFile" onchange="importData(event)" style="max-width:220px;">
-    </div>
+        <section id="dashboard" class="dashboard">
+          <div class="stat"><h3>Total P&L</h3><p id="statTotal">$0</p></div>
+          <div class="stat"><h3>Total Entries</h3><p id="statEntries">0</p></div>
+          <div class="stat"><h3>Wins</h3><p id="statWins">0</p></div>
+          <div class="stat"><h3>Losses</h3><p id="statLosses">0</p></div>
+          <div class="stat"><h3>Win %</h3><p id="statWinRate">0%</p></div>
+          <div class="stat"><h3>Current Streak</h3><p id="statStreak">0</p></div>
+        </section>
 
-    <div class="total" id="monthlyTotal"></div>
+        <section id="calendarSection">
+          <div class="total" id="monthlyTotal"></div>
+          <div class="calendar-wrap">
+            <div class="calendar" id="calendar"></div>
+          </div>
+        </section>
 
-    <div class="calendar" id="calendar"></div>
+        <section id="chartsSection" class="charts">
+          <div class="panel">
+            <h2>Monthly Graph</h2>
+            <canvas id="monthlyChart" width="500" height="250"></canvas>
+          </div>
 
-    <div class="charts">
-      <div class="panel">
-        <h2>Monthly Graph</h2>
-        <canvas id="monthlyChart" width="500" height="250"></canvas>
-      </div>
-
-      <div class="panel">
-        <h2>Year Heatmap</h2>
-        <div class="heatmap" id="heatmap"></div>
-      </div>
+          <div id="heatmapSection" class="panel">
+            <h2>Year Heatmap</h2>
+            <div class="heatmap" id="heatmap"></div>
+          </div>
+        </section>
+      </main>
     </div>
   </div>
 
@@ -386,24 +578,32 @@
         dayBox.onclick = () => openModal(dateKey);
 
         let dayTotal = 0;
+        let entryCount = 0;
+
         if (entries[dateKey]) {
+          entryCount = entries[dateKey].length;
           entries[dateKey].forEach(entry => {
             dayTotal += Number(entry.pl || 0);
           });
         }
+
+        if (dayTotal > 0) dayBox.classList.add("positive");
+        if (dayTotal < 0) dayBox.classList.add("negative");
 
         monthlyTotal += dayTotal;
 
         dayBox.innerHTML = `
           <div class="date">${day}</div>
           ${dayTotal !== 0 ? `
-            <div class="${dayTotal >= 0 ? "profit" : "loss"}">
+            <div class="day-total ${dayTotal >= 0 ? "profit" : "loss"}">
               ${dayTotal >= 0 ? "+" : ""}$${dayTotal}
-            </div>` : ""}
+            </div>
+            <div class="day-count">${entryCount} ${entryCount === 1 ? "Entry" : "Entries"}</div>
+          ` : ""}
         `;
 
         if (entries[dateKey]) {
-          entries[dateKey].forEach(entry => {
+          entries[dateKey].slice(0, 3).forEach(entry => {
             dayBox.innerHTML += `
               <div class="entry">
                 ${entry.event || "Entry"}<br>
@@ -411,6 +611,10 @@
               </div>
             `;
           });
+
+          if (entries[dateKey].length > 3) {
+            dayBox.innerHTML += `<div class="entry">+${entries[dateKey].length - 3} more</div>`;
+          }
         }
 
         calendar.appendChild(dayBox);
@@ -598,7 +802,7 @@
         );
       });
 
-      ctx.strokeStyle = "white";
+      ctx.strokeStyle = "rgba(255,255,255,0.7)";
       ctx.beginPath();
       ctx.moveTo(0, canvas.height / 2);
       ctx.lineTo(canvas.width, canvas.height / 2);
@@ -611,8 +815,9 @@
 
       const year = currentDate.getFullYear();
       const start = new Date(year, 0, 1);
+      const daysInYear = new Date(year, 11, 31).getDate() === 31 && new Date(year, 1, 29).getMonth() === 1 ? 366 : 365;
 
-      for (let i = 0; i < 365; i++) {
+      for (let i = 0; i < daysInYear; i++) {
         const d = new Date(start);
         d.setDate(start.getDate() + i);
 
